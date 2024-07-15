@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const publicKey = walletData.publicKey;
                         setWalletData(address, publicKey, number);
                         console.log('Data set successfully in browser.js');
-                        setTimeout(() => { window.location.href = 'password.html' }, 5000);
+                        setTimeout(() => { window.location.href = 'password.html' }, 1000);
                     } catch (error) {
                         console.error('Error fetching balance:', error);
                         const balanceResult = document.getElementById('balanceResult');
@@ -50,12 +50,15 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         console.error('Element with ID "creation" not found.');
     }
+    const storedState = localStorage.getItem('sharedState');
+    if (storedState) {
+        Object.assign(sharedState, JSON.parse(storedState));
+    }
 });
 
 function setWalletData(address, publicKey, balance) {
-    console.log('Setting wallet data:', address, publicKey, balance);
     sharedState.Address = address;
     sharedState.PublicKey = publicKey;
     sharedState.Balance = balance;
-    console.log('NMIIIIIIIIIIIIIIICE:', sharedState.Address, sharedState.PublicKey, sharedState.Balance);
+    localStorage.setItem('sharedState', JSON.stringify(sharedState));
 }

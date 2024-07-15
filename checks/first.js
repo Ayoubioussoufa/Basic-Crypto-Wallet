@@ -1,10 +1,30 @@
 import { sharedState } from './shared.js';
-console.log(sharedState.Address, sharedState.PublicKey, sharedState.Balance);
-sharedState.Address = 'p';
-sharedState.Balance = 99;
-sharedState.PublicKey = 'prrrrrrrrr';
-console.log(sharedState.Address, sharedState.PublicKey, sharedState.Balance);
 
-setTimeout(() => { window.location.href = 'hh.html'}, 5000);
+document.addEventListener('DOMContentLoaded', () => {
+    const test = document.getElementById('t');
+    if (test) {
+        test.addEventListener('click', () => {
+            console.log(sharedState.Address, sharedState.PublicKey, sharedState.Balance);
+            setD('rrr', 'rrre', 9999);
+            console.log(sharedState.Address, sharedState.PublicKey, sharedState.Balance);
+            window.location.href = 'hh.html';
+        });
+    }
 
-export { sharedState };
+    // Load state from localStorage
+    const storedState = localStorage.getItem('sharedState');
+    if (storedState) {
+        Object.assign(sharedState, JSON.parse(storedState));
+    }
+});
+
+function setD(address, publicKey, balance) {
+    sharedState.Address = address;
+    sharedState.PublicKey = publicKey;
+    sharedState.Balance = balance;
+    localStorage.setItem('sharedState', JSON.stringify(sharedState));
+}
+
+// export function getD() {
+//     return sharedState;
+// }
