@@ -1,0 +1,8 @@
+create wallet -> password -> connected
+
+t affichi l'addresse, balance 
+
+
+stateless in all modules
+store password in db 
+encrypt and store privatekey in db 

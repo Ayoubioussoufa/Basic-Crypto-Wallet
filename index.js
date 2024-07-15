@@ -8,7 +8,7 @@ const ethUtil = require('ethereumjs-util');
 const fs = require('fs');
 const crypto = require('crypto');
 
-const filePath = './encrypted.txt';
+// const filePath = './encrypted.txt';
 const passPhrase = '123456789+Ayoub';
 
 const app = express();
@@ -40,7 +40,7 @@ app.get('/api/balance/:address', async (req, res) => {
 
 app.post('/create-wallet', async(req, res) => {
     const userId = req.body.userId;
-    console.log(userId);
+    // console.log(userId);
     if (req.body.action === 'create_wallet') {
         const account = web3.eth.accounts.create();
             storeEncryptedPrivateKey(userId, account.privateKey);
@@ -72,11 +72,11 @@ async function storeEncryptedPrivateKey(userId, encryptedPrivateKey) {
     encryptedData += cipher.final('hex');
     
     // fs.writeFileSync(filePath, `${iv.toString('hex')}:${encryptedData}`);
-    await Wallet.create({
-        userId: userId,
-        encryptedPrivateKey: encryptedData,
-        iv: iv.toString('hex')
-    });
+    // await Wallet.create({
+    //     userId: userId,
+    //     encryptedPrivateKey: encryptedData,
+    //     iv: iv.toString('hex')
+    // });
 
 }
 
