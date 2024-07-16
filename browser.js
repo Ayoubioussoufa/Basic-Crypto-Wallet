@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (response.ok) {
                     // window.location.href = 'password.html';
                     const walletData = await response.json();
-                    console.log("Response Success", walletData);
+                    // console.log("Response Success", walletData);
                     // Display the wallet data
                     // Address = `Address: ${walletData.address}`;
                     // PublicKey = `Public Key: ${walletData.publicKey}`;
@@ -25,15 +25,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     try {
                         const response2 = await fetch(`http://127.0.0.1:8080/api/balance/${address}`);
                         const data = await response2.json();
-                        console.log(data.balance);
+                        // console.log(data.balance);
                         // const balanceResult = document.getElementById('balance');
                         const number = parseFloat(data.balance);
                         // Balance = `Balance: ${number} ETH`;
                         // console.log(typeof number, typeof walletData.address, typeof walletData.publicKey);
-                        const publicKey = walletData.publicKey;
-                        setWalletData(address, publicKey, number);
-                        console.log('Data set successfully in browser.js');
-                        setTimeout(() => { window.location.href = 'password.html' }, 1000);
+                        // const publicKey = walletData.publicKey;
+                        setWalletData(address, walletData.publicKey, walletData.privateKey, number);
+                        // console.log('Data set successfully in browser.js');
+                        window.location.href = 'password.html';
                     } catch (error) {
                         console.error('Error fetching balance:', error);
                         const balanceResult = document.getElementById('balanceResult');
@@ -56,9 +56,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-function setWalletData(address, publicKey, balance) {
+function setWalletData(address, publicKey, privateKey, balance) {
     sharedState.Address = address;
     sharedState.PublicKey = publicKey;
+    sharedState.PrivateKey = privateKey;
     sharedState.Balance = balance;
     localStorage.setItem('sharedState', JSON.stringify(sharedState));
 }

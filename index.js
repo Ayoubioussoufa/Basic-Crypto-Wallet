@@ -1,24 +1,53 @@
-const { v4: uuidv4 } = require("uuid");
-let { Wallet } = require('./database');
 var { Web3 } = require("web3");
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const express = require('express');
 const ethUtil = require('ethereumjs-util');
-const fs = require('fs');
 const crypto = require('crypto');
-
-// const filePath = './encrypted.txt';
 const passPhrase = '123456789+Ayoub';
-
+const multer = require('multer');
+const upload = multer();
 const app = express();
 
+app.use(upload.none());
 app.use(bodyParser.json());
 app.use(cors());
 
-// Generate a UUID v4
-const uuid = uuidv4();
-console.log(`UUID: ${uuid}`);
+const sequelize = require('./config/database');
+const Users = require('./modules/Users');
+const Wallets = require('./modules/Wallets');
+
+// Define associations
+Users.hasOne(Wallets, {
+  foreignKey: 'userId',
+  sourceKey: 'user_id',
+  as: 'wallet'
+});
+
+Wallets.belongsTo(Users, {
+  foreignKey: 'userId',
+  targetKey: 'user_id',
+  as: 'user'
+});
+
+// Sync all models
+(async () => {
+  try {
+    // console.log('Attempting to authenticate...');
+    // await sequelize.authenticate();
+    // console.log('Connection has been established successfully.');
+    
+    console.log('Attempting to sync Users model...');
+    await Users.sync();
+    console.log('Users model was synchronized successfully.');
+    
+    console.log('Attempting to sync Wallets model...');
+    await Wallets.sync();
+    console.log('Wallets model was synchronized successfully.');
+  } catch (error) {
+    console.error('Unable to connect to the database:', error);
+  }
+})();
 
 var provider = "https://sepolia.infura.io/v3/6483579a38ee4626b9a67d15ca7fef2d";
 // var web3Provider = new Web3(provider);
@@ -39,11 +68,9 @@ app.get('/api/balance/:address', async (req, res) => {
 });
 
 app.post('/create-wallet', async(req, res) => {
-    const userId = req.body.userId;
-    // console.log(userId);
     if (req.body.action === 'create_wallet') {
         const account = web3.eth.accounts.create();
-            storeEncryptedPrivateKey(userId, account.privateKey);
+            storeEncryptedPrivateKey(account.privateKey);
             const privateKeyBuffer = Buffer.from(account.privateKey.slice(2), 'hex');
             const publicKey = ethUtil.privateToPublic(privateKeyBuffer).toString('hex');
             res.json({
@@ -57,13 +84,29 @@ app.post('/create-wallet', async(req, res) => {
     }
 });
 
+app.post('/UserInfo', async(req, res) => {
+    try {
+        let newUser = await Users.create({
+            username: req.body.LoginID,
+            password_hash: req.body.password
+        });
+        console.log('Transaction committed successfully.');
+        updateWalletWithUserId(newUser.user_id);
+    } catch (error) {
+        console.error("Error creating user: ", error);
+    }
+    res.json();
+});
+
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });
 
+let wallet;
+
 // Store encrypted private key in a file
-async function storeEncryptedPrivateKey(userId, encryptedPrivateKey) {
+async function storeEncryptedPrivateKey(encryptedPrivateKey) {
     const key = crypto.scryptSync(passPhrase, 'salt', 32); // Derive key from passphrase (replace 'salt' with a unique value)
     const iv = crypto.randomBytes(16); // Generate IV (Initialization Vector)
     
@@ -71,26 +114,23 @@ async function storeEncryptedPrivateKey(userId, encryptedPrivateKey) {
     let encryptedData = cipher.update(encryptedPrivateKey, 'utf8', 'hex');
     encryptedData += cipher.final('hex');
     
-    // fs.writeFileSync(filePath, `${iv.toString('hex')}:${encryptedData}`);
-    // await Wallet.create({
-    //     userId: userId,
-    //     encryptedPrivateKey: encryptedData,
-    //     iv: iv.toString('hex')
-    // });
+    try {
+        wallet = await Wallets.create({
+            userId: 9999,
+            encryptedPrivateKey: encryptedData,
+            iv: iv.toString('hex')
+        });
+    } catch (error) {
+        console.error("Couldn't create wallet", error);
+    }
 
 }
 
 // Retrieve encrypted private key from file
 async function getEncryptedPrivateKey(userId) {
-    const wallet = await Wallet.findOne({where: {userId: userId}});
-    // if (fs.existsSync(filePath)) {
+    const wallet = await Wallets.findOne({where: {userId: userId}});
     if (wallet)
     {
-        // const data = fs.readFileSync(filePath, 'utf8');
-        // const parts = data.split(':');
-        // const iv = Buffer.from(parts[0], 'hex');
-        // const encryptedData = parts[1];
-
         const iv = Buffer.from(wallet.iv, 'hex');
         const key = crypto.scryptSync(passPhrase, 'salt', 32); // Derive key from passphrase (replace 'salt' with a unique value)
         const encryptedData = wallet.encryptedPrivateKey;
@@ -102,6 +142,17 @@ async function getEncryptedPrivateKey(userId) {
         return decryptedPrivateKey;
     }
     return null;
+}
+
+async function updateWalletWithUserId(userId) {
+    try {
+        wallet.update({userId: userId});
+        await wallet.save();
+        console.log('Wallet updated with user ID:', wallet.toJSON());
+    } catch (error) {
+        console.error('Error updating wallet with user ID:', error);
+        throw error;
+    }
 }
 
 // WHEN I ADD LINE 38 THE BROWSER RELOADS ......................
