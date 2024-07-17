@@ -12,6 +12,7 @@ const app = express();
 app.use(upload.none());
 app.use(bodyParser.json());
 app.use(cors());
+app.set('view engine', 'ejs');
 
 const sequelize = require('./config/database');
 const Users = require('./modules/Users');
@@ -68,17 +69,26 @@ app.get('/api/balance/:address', async (req, res) => {
 });
 
 app.get('/account', async (req, res) => {
-    const { username } = req.query;
+    const user_Id = req.query.user_id;
+    // console.log("ID second : ", typeof user_Id);
+    // console.log(typeof req.query.user_id);
     try {
-        // let balance = await Wallets.findAll({
-        //     where: {
-        //         userId: 
-        //     }
-        // });
-        // res.json({
-            
-        // });
-        console.log(username);
+        let wallet = await Wallets.findAll({
+            where: {
+                userId: user_Id
+            }
+        });
+        if (wallet) {
+            // res.render('account', {wallet});
+            res.join(wallet);
+        }
+        // console.log(wallet[0]);
+        // console.log(wallet[0].userId);
+        // console.log(wallet[0].encryptedPrivateKey);
+        // console.log(wallet[0].address);
+        // console.log("---------99");
+        // setTimeout(({}), 5000);
+        // res.json(wallet[0]);
     } catch (error) {
         console.error('Error fetching balance:', error);
         res.status(500).json({ error: 'Failed to fetch balance' });
@@ -126,17 +136,24 @@ app.post('/AllData', async (req, res) => {
                 password_hash: req.body.password
             }
         });
-        // console.log(user.length);
+        // console.log(user[0]);
+        // console.log("ID FIRST : ", user[0].user_id);
+        // console.log(user[0].username);
+        // console.log(user[0].password_hash);
+        // console.log(user[0].created_at);
+        console.log("---------1");
+
         if (user.length > 0) {
-            res.status(200).redirect(`/account?username=${username}`);
+            res.status(200).redirect(`/account?user_id=${user[0].user_id}`);
         }
         else
             res.status(404).json({ message: 'User not found' });
+        console.log("---------3");
+
     } catch (error) {
         console.error("Error occurred: ", error);
         res.status(500).json({ message: 'Internal server error' });
     }
-    
 });
 
 const PORT = process.env.PORT || 8080;
