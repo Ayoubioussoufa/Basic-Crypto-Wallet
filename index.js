@@ -67,12 +67,30 @@ app.get('/api/balance/:address', async (req, res) => {
     }
 });
 
+app.get('/account', async (req, res) => {
+    const { username } = req.query;
+    try {
+        // let balance = await Wallets.findAll({
+        //     where: {
+        //         userId: 
+        //     }
+        // });
+        // res.json({
+            
+        // });
+        console.log(username);
+    } catch (error) {
+        console.error('Error fetching balance:', error);
+        res.status(500).json({ error: 'Failed to fetch balance' });
+    }
+});
+
 app.post('/create-wallet', async(req, res) => {
     if (req.body.action === 'create_wallet') {
         const account = web3.eth.accounts.create();
-            storeEncryptedPrivateKey(account.privateKey);
-            const privateKeyBuffer = Buffer.from(account.privateKey.slice(2), 'hex');
-            const publicKey = ethUtil.privateToPublic(privateKeyBuffer).toString('hex');
+        const privateKeyBuffer = Buffer.from(account.privateKey.slice(2), 'hex');
+        const publicKey = ethUtil.privateToPublic(privateKeyBuffer).toString('hex');
+        storeEncryptedPrivateKey(account.privateKey, account.address, publicKey);
             res.json({
                 address: account.address,
                 publicKey: publicKey,
@@ -98,6 +116,29 @@ app.post('/UserInfo', async(req, res) => {
     res.json();
 });
 
+app.post('/AllData', async (req, res) => {
+    // console.log(req.body.password);
+    // console.log(req.body.logId);
+    try {
+        let user = await Users.findAll({
+            where: {
+                username: req.body.logId,
+                password_hash: req.body.password
+            }
+        });
+        // console.log(user.length);
+        if (user.length > 0) {
+            res.status(200).redirect(`/account?username=${username}`);
+        }
+        else
+            res.status(404).json({ message: 'User not found' });
+    } catch (error) {
+        console.error("Error occurred: ", error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+    
+});
+
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
@@ -106,7 +147,7 @@ app.listen(PORT, () => {
 let wallet;
 
 // Store encrypted private key in a file
-async function storeEncryptedPrivateKey(encryptedPrivateKey) {
+async function storeEncryptedPrivateKey(encryptedPrivateKey, address, publicKey) {
     const key = crypto.scryptSync(passPhrase, 'salt', 32); // Derive key from passphrase (replace 'salt' with a unique value)
     const iv = crypto.randomBytes(16); // Generate IV (Initialization Vector)
     
@@ -118,7 +159,9 @@ async function storeEncryptedPrivateKey(encryptedPrivateKey) {
         wallet = await Wallets.create({
             userId: 9999,
             encryptedPrivateKey: encryptedData,
-            iv: iv.toString('hex')
+            iv: iv.toString('hex'),
+            address: address,
+            publicKey: publicKey
         });
     } catch (error) {
         console.error("Couldn't create wallet", error);

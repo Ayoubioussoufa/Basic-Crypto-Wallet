@@ -4,7 +4,7 @@ const sequelize = require('../config/database');
 // class Users extends Model {}
 
 // Users.init({
-const Users = sequelize.define('Users', {
+const Users = sequelize.define('users', {
   user_id: {
     type: DataTypes.INTEGER,
     primaryKey: true,

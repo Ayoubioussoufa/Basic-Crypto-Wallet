@@ -47,13 +47,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log(e);
             }
         });
-    } else {
-        console.error('Element with ID "creation" not found.');
-    }
-    const storedState = localStorage.getItem('sharedState');
+        const storedState = localStorage.getItem('sharedState');
     if (storedState) {
         Object.assign(sharedState, JSON.parse(storedState));
     }
+    } else {
+        console.error('Element with ID "creation" not found.');
+    }    
 });
 
 function setWalletData(address, publicKey, privateKey, balance) {
@@ -63,3 +63,13 @@ function setWalletData(address, publicKey, privateKey, balance) {
     sharedState.Balance = balance;
     localStorage.setItem('sharedState', JSON.stringify(sharedState));
 }
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    let log_In = document.getElementById("log In");
+    if (log_In) {
+        log_In.addEventListener('click', () => {
+            window.location.href = './login.html';
+        });
+    }
+});

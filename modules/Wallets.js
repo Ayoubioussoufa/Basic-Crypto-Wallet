@@ -5,7 +5,7 @@ const sequelize = require('../config/database');
 // class Wallets extends Model {}
 
 // Wallets.init({
-const Wallets = sequelize.define('Wallets', {
+const Wallets = sequelize.define('wallets', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -13,7 +13,7 @@ const Wallets = sequelize.define('Wallets', {
     allowNull: false,
   },
   userId: {
-    type: DataTypes.STRING(255),
+    type: DataTypes.INTEGER,
     allowNull: false,
     unique: true,
   },
@@ -22,6 +22,14 @@ const Wallets = sequelize.define('Wallets', {
     allowNull: false,
   },
   iv: {
+    type: DataTypes.STRING(255),
+    allowNull: false,
+  },
+  address: {
+    type: DataTypes.STRING(255),
+    allowNull: false,
+  },
+  publicKey: {
     type: DataTypes.STRING(255),
     allowNull: false,
   },
@@ -38,7 +46,7 @@ const Wallets = sequelize.define('Wallets', {
 }, {
   sequelize,
   modelName: 'Wallets',
-  tableName: 'Wallets',
+  tableName: 'wallets',
   timestamps: true,
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
