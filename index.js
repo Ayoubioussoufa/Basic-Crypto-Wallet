@@ -17,6 +17,7 @@ app.set('view engine', 'ejs');
 const sequelize = require('./config/database');
 const Users = require('./modules/Users');
 const Wallets = require('./modules/Wallets');
+const { INTEGER } = require("sequelize");
 
 // Define associations
 Users.hasOne(Wallets, {
@@ -70,28 +71,39 @@ app.get('/api/balance/:address', async (req, res) => {
 
 app.get('/account', async (req, res) => {
     const user_Id = req.query.user_id;
-    // console.log("ID second : ", typeof user_Id);
-    // console.log(typeof req.query.user_id);
     try {
         let wallet = await Wallets.findAll({
             where: {
                 userId: user_Id
             }
         });
-        if (wallet) {
-            // res.render('account', {wallet});
-            res.join(wallet);
+        if (wallet.length > 0) {
+            res.json(wallet[0]);
+        } else {
+            res.status(404).json({ error: 'No wallet found for the given user_id' });
         }
-        // console.log(wallet[0]);
-        // console.log(wallet[0].userId);
-        // console.log(wallet[0].encryptedPrivateKey);
-        // console.log(wallet[0].address);
-        // console.log("---------99");
-        // setTimeout(({}), 5000);
-        // res.json(wallet[0]);
     } catch (error) {
-        console.error('Error fetching balance:', error);
-        res.status(500).json({ error: 'Failed to fetch balance' });
+        console.error('Error fetching wallet:', error);
+        res.status(500).json({ error: 'Failed to fetch wallet' });
+    }
+});
+
+app.post('/AllData', async (req, res) => {
+    try {
+        let user = await Users.findAll({
+            where: {
+                username: req.body.logId,
+                password_hash: req.body.password
+            }
+        });
+        if (user.length > 0) {
+            res.redirect(`/account?user_id=${user[0].user_id}`);
+        }
+        else
+            res.status(404).json({ message: 'User not found' });
+    } catch (error) {
+        console.error("Error occurred: ", error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 });
 
@@ -118,41 +130,12 @@ app.post('/UserInfo', async(req, res) => {
             username: req.body.LoginID,
             password_hash: req.body.password
         });
-        console.log('Transaction committed successfully.');
+        console.log(newUser.user_id);
+        console.log('Transaction committed successfully.000000000000000000000000000000000000000000');
         updateWalletWithUserId(newUser.user_id);
+        res.redirect(`/account?user_id=${newUser.user_id}`);
     } catch (error) {
         console.error("Error creating user: ", error);
-    }
-    res.json();
-});
-
-app.post('/AllData', async (req, res) => {
-    // console.log(req.body.password);
-    // console.log(req.body.logId);
-    try {
-        let user = await Users.findAll({
-            where: {
-                username: req.body.logId,
-                password_hash: req.body.password
-            }
-        });
-        // console.log(user[0]);
-        // console.log("ID FIRST : ", user[0].user_id);
-        // console.log(user[0].username);
-        // console.log(user[0].password_hash);
-        // console.log(user[0].created_at);
-        console.log("---------1");
-
-        if (user.length > 0) {
-            res.status(200).redirect(`/account?user_id=${user[0].user_id}`);
-        }
-        else
-            res.status(404).json({ message: 'User not found' });
-        console.log("---------3");
-
-    } catch (error) {
-        console.error("Error occurred: ", error);
-        res.status(500).json({ message: 'Internal server error' });
     }
 });
 
@@ -178,7 +161,8 @@ async function storeEncryptedPrivateKey(encryptedPrivateKey, address, publicKey)
             encryptedPrivateKey: encryptedData,
             iv: iv.toString('hex'),
             address: address,
-            publicKey: publicKey
+            publicKey: publicKey,
+            balance: 0
         });
     } catch (error) {
         console.error("Couldn't create wallet", error);
@@ -208,7 +192,7 @@ async function updateWalletWithUserId(userId) {
     try {
         wallet.update({userId: userId});
         await wallet.save();
-        console.log('Wallet updated with user ID:', wallet.toJSON());
+        // console.log('Wallet updated with user ID:', wallet.toJSON());
     } catch (error) {
         console.error('Error updating wallet with user ID:', error);
         throw error;

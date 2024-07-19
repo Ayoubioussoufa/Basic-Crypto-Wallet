@@ -20,14 +20,19 @@ document.addEventListener('DOMContentLoaded', () => {
             if (firstPassword.value === secondPassword.value) {
                 let response = await fetch('http://127.0.0.1:8080/UserInfo', {
                     method: 'POST',
-                    // headers: {
-                    //     'Content-Type' : 'application/json'
-                    // }, //not needed when using FormData that is a builtin
                     body: form
                 });
-                if (response.ok) {
-                    window.location.href = './account.html';
-                }
+                console.log("ffffffffffffffffffff");
+                console.log(response);
+                console.log("ffffffffffffffffffff");
+
+                let r = await response.json();
+                console.log(r);
+                console.log("ffffffffffffffffffff");
+
+                // if (response.ok) {
+                //     window.location.href = './account.html';
+                // }
             }
             else {
                 alert('Passwords do not match. Please try again.');
